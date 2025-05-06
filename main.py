@@ -1,4 +1,27 @@
 
+
+
+def print_solution(node):
+    """
+    Print the solution path from the root node to the goal node.
+    """
+    path = []
+    while node:
+        path.append(node.state)
+        node = node.parent
+    for state in reversed(path):
+        for i in range(0,9,3):
+            print(state[i:i+3])
+        print()
+
+def goal_test(state):  
+    """
+    Check if the current state is the goal state.
+    """
+    return state == [1, 2, 3, 4, 5, 6, 7, 8, 0]
+
+
+
 def main():
     print("Welcome to the Zi's 8 Puzzle Solver!")
     print("Input '1' to use a default sample puzzle ,or '2' to enter your own puzzle.")
