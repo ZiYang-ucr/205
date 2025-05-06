@@ -14,12 +14,6 @@ def print_solution(node):
             print(state[i:i+3])
         print()
 
-def goal_test(state):  
-    """
-    Check if the current state is the goal state.
-    """
-    return state == [1, 2, 3, 4, 5, 6, 7, 8, 0]
-
 
 
 def main():
