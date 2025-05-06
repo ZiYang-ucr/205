@@ -1,4 +1,4 @@
-class MisplacedTileNode:
+class AStarMisplacedTileNode:
     def __init__(self, state, parent=None, g=0):
         self.state = state
         self.parent = parent
