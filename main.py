@@ -3,12 +3,11 @@
 import heapq
 from UniformCostNode import UniformCostNode
 from AStarMisplacedTileNode import AStarMisplacedTileNode
-from AStartManhattanDistanceNode import AStarManhattanDistanceNode
+from AStarManhattanDistanceNode import AStarManhattanDistanceNode
 
-def enqueue(queue, node):
-    for node in queue:
-        queue.append(node)
-    queue.sort() # Sort the queue based on the total cost
+def enqueue(queue, children):
+    for child in children:
+        heapq.heappush(queue, child) # Add the child node to the queue
     return queue
 
 def expand(node, NodeClass):
@@ -16,27 +15,19 @@ def expand(node, NodeClass):
     idx = node.state.index(0)
     x,y = divmod (idx, 3) # Get the row and column of the empty space
     neighborList = []
+    max_g = node.g 
     for dx, dy in moveLists:
         new_x, new_y = x + dx, y + dy
         if 0 <= new_x < 3 and 0 <= new_y < 3: # Check if the new position is within bounds
             new_idx = new_x * 3 + new_y
             new_state = node.state[:]
             new_state[idx], new_state[new_idx] = new_state[new_idx], new_state[idx]
-            neighborList.append(NodeClass(new_state,node,node.cost + 1)) 
-    return neighborList     
+            child = NodeClass(new_state, node, node.g + 1) # Create a new child node
+            neighborList.append(child) # Add the child node to the neighbor list
+            max_g = max(max_g ,child.g) # Update the maximum g value
+    return neighborList, max_g     
 
-def print_solution(node):
-    """
-    Print the solution path from the root node to the goal node.
-    """
-    path = []
-    while node:
-        path.append(node.state)
-        node = node.parent
-    for state in reversed(path):
-        for i in range(0,9,3):
-            print(state[i:i+3])
-        print()
+
 
 def goal_test(state):  
     """
@@ -54,11 +45,15 @@ def general_search(initial_state, NodeClass, queueing_function):
     max_q = 1 # Initialize max queue size to 1
     expanded = 0
     visited = set()
+    max_depth_reached = 0 # Initialize max depth reached to 0
     while queue:
+        max_q = max(max_q, len(queue)) # Update the maximum queue size
         node = heapq.heappop(queue) # Pop the node with the lowest total cost
-
+        expanded += 1 # Increment the expanded node count
+        
         if goal_test(node.state):
             print(f"Solution found! Depth: {node.g}, Nodes expanded: {expanded}, Max queue size: {max_q}")
+            print("Max depth reached:", max_depth_reached)
             return node
         if tuple(node.state) in visited:
             continue   # Skip already visited states
@@ -68,11 +63,10 @@ def general_search(initial_state, NodeClass, queueing_function):
         for i in range(0,9,3):
             print(node.state[i:i+3])
         print()
-        if goal_test(node.state):
-            print("Goal state reached!")
-            return node
-        childenodes = expand(node, NodeClass) # Expand the current node
+        childenodes,max_child_g = expand(node, NodeClass) # Expand the current node
+        max_depth_reached = max(max_depth_reached, max_child_g) # Update the maximum depth reached
         queueing_function(queue, childenodes) # Enqueue the children nodes
+
     return None
 
 
@@ -82,7 +76,7 @@ def main():
     mode = input("Please enter your choice: ")
     default_puzzle = [1,2,3,0,5,6,7,8,4]
     if mode == '1':
-        puzzle = default_puzzle
+        initial_state = default_puzzle
     elif mode == '2':
         initial_state = []
         print("Please enter the puzzle row by row, using 0 for the empty space.")
@@ -98,17 +92,16 @@ def main():
     print("3. A* Search with the Manhattan Distance heuristic")         
     choice = input("Please enter your choice: ")
     if choice == '1':
-        search = general_search(initial_state,enqueue, UniformCostNode)
+        search = general_search(initial_state,UniformCostNode,enqueue)
     elif choice == '2':
-        search = general_search(initial_state,enqueue, AStarMisplacedTileNode)
+        search = general_search(initial_state,AStarMisplacedTileNode,enqueue)
     elif choice == '3':
-        search = general_search(initial_state,enqueue, AStarManhattanDistanceNode)
+        search = general_search(initial_state,AStarManhattanDistanceNode,enqueue)
     else:
         print("Invalid choice. Exiting.")
         return
 
     if search:
-        print("Solution found!")
         print_solution(search)
     else:
         print("Failed to reach the goal.")
@@ -127,6 +120,7 @@ def print_solution(node):
         for i in range(0,9,3):
             print(state[i:i+3])
         print()
+    print(f"Total moves: {len(path) - 1}") # Exclude the initial state from the move count
 
 if __name__ == "__main__":
     main()    
